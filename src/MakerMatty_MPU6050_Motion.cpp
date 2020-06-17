@@ -54,13 +54,13 @@ void MPU6050_Motion::task(void* p)
     while (true) {
 
         if (xSemaphoreTake(data->i2cSemaphore, 1)) {
-            //cca 549 us @ 160MHz
+            /* takes around 549 us @ 160MHz */
             data->self->mpu6050.read();
             xSemaphoreGive(data->i2cSemaphore);
         }
 
         if (xSemaphoreTake(data->dataSemaphore, 1)) {
-            //cca 25us @ 160MHz
+            /* takes around 25us @ 160MHz */
             data->self->mpu6050.update();
 
             if (data->self->m_updateCb != nullptr) {

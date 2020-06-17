@@ -16,7 +16,7 @@ class MPU6050_Motion {
 public:
     MPU6050_Motion(TwoWire& wire = Wire);
 
-    // @returns semaphore for i2c communication
+    /* @returns semaphore for i2c communication */
     SemaphoreHandle_t begin(const uint8_t sdaPin = SDA, const uint8_t sclPin = SCL, const uint32_t wireFreq = 400000UL, const BaseType_t xCoreID = APP_CPU_NUM);
     void end();
 
