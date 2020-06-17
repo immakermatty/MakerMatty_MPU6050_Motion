@@ -14,6 +14,8 @@ MPU6050_Motion::MPU6050_Motion(TwoWire& w)
         .self = this,
     }
     , mpu6050(*wire)
+    , m_updateCb(nullptr)
+    , m_updateArg(nullptr)
 {
 }
 
