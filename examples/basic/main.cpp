@@ -1,7 +1,6 @@
 #include <Arduino.h>
 
-#include <Motion.h>
-
+#include <MakerMatty_MPU6050_Motion.h>
 
 void setup()
 {
