@@ -19,7 +19,7 @@ MPU6050_Motion::MPU6050_Motion(TwoWire& w)
 {
 }
 
-bool MPU6050_Motion::begin(const uint8_t sdaPin, const uint8_t sclPin, const uint32_t wireFreq, const BaseType_t xCoreID, SemaphoreHandle_t* hardwareSemaphore)
+bool MPU6050_Motion::begin(const uint8_t sdaPin, const uint8_t sclPin, const uint32_t wireFreq, const BaseType_t xCoreID, SemaphoreHandle_t* pHwSemaphore)
 {
     if (taskHandle == nullptr) {
 
@@ -36,15 +36,15 @@ bool MPU6050_Motion::begin(const uint8_t sdaPin, const uint8_t sclPin, const uin
             }
         }
 
-        if (hardwareSemaphore) {
-            if (*hardwareSemaphore == nullptr) {
-                *hardwareSemaphore = xSemaphoreCreateMutex();
-                if(!*hardwareSemaphore){
-                    assert(*hardwareSemaphore);
+        if (pHwSemaphore) {
+            if (*pHwSemaphore == nullptr) {
+                *pHwSemaphore = xSemaphoreCreateMutex();
+                if(!*pHwSemaphore){
+                    assert(*pHwSemaphore);
                     return false;
                 }
             }
-            taskData.pHardwareSemaphore = hardwareSemaphore;
+            taskData.pHardwareSemaphore = pHwSemaphore;
         } else {
             taskData.pHardwareSemaphore = nullptr;
         }

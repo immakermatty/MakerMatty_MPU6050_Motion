@@ -16,7 +16,7 @@ class MPU6050_Motion {
 public:
     MPU6050_Motion(TwoWire& wire = Wire);
 
-    bool begin(const uint8_t sdaPin = SDA, const uint8_t sclPin = SCL, const uint32_t wireFreq = 400000UL, const BaseType_t xCoreID = APP_CPU_NUM, SemaphoreHandle_t* hardwareSemaphore = nullptr);
+    bool begin(const uint8_t sdaPin = SDA, const uint8_t sclPin = SCL, const uint32_t wireFreq = 400000UL, const BaseType_t xCoreID = APP_CPU_NUM, SemaphoreHandle_t* pHardwareSemaphore = nullptr);
     void end();
 
     typedef void (*UpdateCallback)(MPU6050* mpu6050, void* cbarg);
