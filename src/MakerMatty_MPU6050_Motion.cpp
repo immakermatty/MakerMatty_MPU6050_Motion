@@ -8,40 +8,61 @@ MPU6050_Motion::MPU6050_Motion(TwoWire& w)
     , scl(SCL)
     , freq(400000UL)
     , taskData {
-        .taskHandle = nullptr,
         .dataSemaphore = nullptr,
-        .i2cSemaphore = nullptr,
-        .self = this,
+        .pHardwareSemaphore = nullptr,
+        .self = this
     }
+    , taskHandle(nullptr)
     , mpu6050(*wire)
     , m_updateCb(nullptr)
     , m_updateArg(nullptr)
 {
 }
 
-SemaphoreHandle_t MPU6050_Motion::begin(const uint8_t sdaPin, const uint8_t sclPin, const uint32_t wireFreq, const BaseType_t xCoreID)
+bool MPU6050_Motion::begin(const uint8_t sdaPin, const uint8_t sclPin, const uint32_t wireFreq, const BaseType_t xCoreID, SemaphoreHandle_t* hardwareSemaphore)
 {
-    if (taskData.taskHandle == nullptr) {
+    if (taskHandle == nullptr) {
 
-        //if (taskData.dataSemaphore == nullptr) {
-        taskData.dataSemaphore = xSemaphoreCreateMutex();
-        assert(taskData.dataSemaphore);
-        //}
+        if (taskData.dataSemaphore) {
+            vSemaphoreDelete(taskData.dataSemaphore);
+            taskData.dataSemaphore = nullptr;
+        }
 
-        //if (taskData.i2cSemaphore == nullptr) {
-        taskData.i2cSemaphore = xSemaphoreCreateMutex();
-        assert(taskData.i2cSemaphore);
-        //}
+        if (taskData.dataSemaphore == nullptr) {
+            taskData.dataSemaphore = xSemaphoreCreateMutex();
+            if (!taskData.dataSemaphore) {
+                assert(taskData.dataSemaphore);
+                return false;
+            }
+        }
+
+        if (hardwareSemaphore) {
+            if (*hardwareSemaphore == nullptr) {
+                *hardwareSemaphore = xSemaphoreCreateMutex();
+                if(!*hardwareSemaphore){
+                    assert(*hardwareSemaphore);
+                    return false;
+                }
+            }
+            taskData.pHardwareSemaphore = hardwareSemaphore;
+        } else {
+            taskData.pHardwareSemaphore = nullptr;
+        }
 
         sda = sdaPin;
         scl = sclPin;
         freq = wireFreq;
-        BaseType_t result = xTaskCreateUniversal(task, "motion", 4096, &taskData, 1, &taskData.taskHandle, xCoreID);
-        assert(result == pdPASS);
 
-        return taskData.i2cSemaphore;
+        BaseType_t result = xTaskCreateUniversal(task, "motion", 4096, &taskData, 1, &taskHandle, xCoreID);
+
+        if (!result) {
+            assert(result == pdPASS);
+            return false;
+        }
+
+        return true;
     } else {
-        return nullptr;
+        return true;
     }
 }
 
@@ -53,10 +74,23 @@ void MPU6050_Motion::task(void* p)
 
     while (true) {
 
-        if (xSemaphoreTake(data->i2cSemaphore, 1)) {
+        // if (data->pHardwareSemaphore) {
+        //     if (xSemaphoreTake(*(data->pHardwareSemaphore), 1)) {
+        //         /* takes around 549 us @ 160MHz */
+        //         data->self->mpu6050.read();
+        //         xSemaphoreGive(*(data->pHardwareSemaphore));
+        //     }
+        // } else {
+        //     /* takes around 549 us @ 160MHz */
+        //     data->self->mpu6050.read();
+        // }
+
+        if (!data->pHardwareSemaphore || xSemaphoreTake(*(data->pHardwareSemaphore), 1)) {
             /* takes around 549 us @ 160MHz */
             data->self->mpu6050.read();
-            xSemaphoreGive(data->i2cSemaphore);
+            if (data->pHardwareSemaphore) {
+                xSemaphoreGive(*(data->pHardwareSemaphore));
+            }
         }
 
         if (xSemaphoreTake(data->dataSemaphore, 1)) {
@@ -85,19 +119,14 @@ void MPU6050_Motion::task(void* p)
 
 void MPU6050_Motion::end()
 {
-    if (taskData.taskHandle != nullptr) {
-        vTaskDelete(taskData.taskHandle);
-        taskData.taskHandle = nullptr;
+    if (taskHandle != nullptr) {
+        vTaskDelete(taskHandle);
+        taskHandle = nullptr;
     }
 
     if (taskData.dataSemaphore != nullptr) {
         vSemaphoreDelete(taskData.dataSemaphore);
         taskData.dataSemaphore = nullptr;
-    }
-
-    if (taskData.i2cSemaphore != nullptr) {
-        vSemaphoreDelete(taskData.i2cSemaphore);
-        taskData.i2cSemaphore = nullptr;
     }
 }
 

@@ -16,8 +16,7 @@ class MPU6050_Motion {
 public:
     MPU6050_Motion(TwoWire& wire = Wire);
 
-    /* @returns semaphore for i2c communication */
-    SemaphoreHandle_t begin(const uint8_t sdaPin = SDA, const uint8_t sclPin = SCL, const uint32_t wireFreq = 400000UL, const BaseType_t xCoreID = APP_CPU_NUM);
+    bool begin(const uint8_t sdaPin = SDA, const uint8_t sclPin = SCL, const uint32_t wireFreq = 400000UL, const BaseType_t xCoreID = APP_CPU_NUM, SemaphoreHandle_t* hardwareSemaphore = nullptr);
     void end();
 
     typedef void (*UpdateCallback)(MPU6050* mpu6050, void* cbarg);
@@ -35,13 +34,13 @@ private:
     uint32_t freq;
 
     struct TaskData {
-        TaskHandle_t taskHandle;
         SemaphoreHandle_t dataSemaphore;
-        SemaphoreHandle_t i2cSemaphore;
+        SemaphoreHandle_t* pHardwareSemaphore;
         MPU6050_Motion* self;
     };
 
     TaskData taskData;
+    TaskHandle_t taskHandle;
     static void task(void* p);
 
     MPU6050 mpu6050;
