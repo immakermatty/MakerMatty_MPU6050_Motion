@@ -113,7 +113,7 @@ MPU6050::GyroAxis::GyroAxis(const uint32_t calibPeriod)
 {
 }
 
-void MPU6050::GyroAxis::update(const int16_t& val, const uint16_t& timeDelta_ms)
+void MPU6050::GyroAxis::update(const int16_t val, const uint32_t timeDelta_ms)
 {
     //gyro calculation
     value = val;
@@ -164,8 +164,7 @@ int32_t MPU6050::GyroAxis::getAngle()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 MPU6050::AccAxis::AccAxis(const uint16_t accScanPeriod_ms, const uint16_t accUpdatePeriod_ms, const uint16_t shockDutaion_ms)
-    : accRaw_last(0)
-    , accTime_ms(0)
+    : accTime_ms(0)
     , shockTime_ms(0)
     , accAvrg(accScanPeriod_ms / accUpdatePeriod_ms)
     , accUpdatePeriod_ms(accUpdatePeriod_ms)
@@ -175,8 +174,10 @@ MPU6050::AccAxis::AccAxis(const uint16_t accScanPeriod_ms, const uint16_t accUpd
 {
 }
 
-void MPU6050::AccAxis::update(const int16_t& accRaw, const uint16_t& timeDelta_ms)
+void MPU6050::AccAxis::update(const int16_t accRaw, const uint32_t timeDelta_ms)
 {
+    static int16_t accRaw_last = 0;
+
     accTime_ms += timeDelta_ms;
     shockTime_ms += timeDelta_ms;
 
@@ -196,15 +197,17 @@ void MPU6050::AccAxis::update(const int16_t& accRaw, const uint16_t& timeDelta_m
         shockAvrg.update((uint16_t)accChange);
     }
 
-    //acc calculation
+    //if the thing is shocking, then skip acc update
     if (shockAvrg.getValue() >= DEFAULT_SHOCK_NOISE_TRESHOLD) {
         accTime_ms = 0;
-    } else {
-        while (accTime_ms >= accUpdatePeriod_ms) {
-            accTime_ms -= accUpdatePeriod_ms;
-            //shock is being updated "every accUpdatePeriod_ms ms"
-            accAvrg.update(accRaw);
-        }
+        return;
+    }
+
+    //acc calculation
+    while (accTime_ms >= accUpdatePeriod_ms) {
+        accTime_ms -= accUpdatePeriod_ms;
+        //acc is being updated "every accUpdatePeriod_ms ms"
+        accAvrg.update(accRaw);
     }
 }
 
@@ -222,7 +225,6 @@ uint16_t MPU6050::AccAxis::getShock()
 
 MPU6050::MPU6050(TwoWire& wire)
     : MPU6050_Raw(wire)
-    , lastUpdated_micros(0)
     , gyro { GyroAxis(), GyroAxis(), GyroAxis() }
     , acc { AccAxis(), AccAxis(), AccAxis() }
 {
@@ -235,9 +237,11 @@ void MPU6050::begin(const uint8_t sdaPin, const uint8_t sclPin, const uint32_t w
 
 void MPU6050::update()
 {
-    int64_t current_micros = esp_timer_get_time();
-    uint16_t delta_ms = (uint16_t)((current_micros - lastUpdated_micros) / 1000);
-    lastUpdated_micros = current_micros;
+    static unsigned long lastUpdated_millis = 0;
+    unsigned long current_millis = millis();
+    
+    uint32_t delta_ms = (uint32_t)(current_millis - lastUpdated_millis);
+    lastUpdated_millis = current_millis;
 
     for (int i = 0; i < 3; i++) {
         acc[i].update(rawData.acc[i], delta_ms);

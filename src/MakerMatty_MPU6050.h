@@ -91,7 +91,7 @@ class MPU6050 : public MPU6050_Raw {
 
     public:
         GyroAxis(const uint32_t calibPeriod = DEFAULT_GYRO_CALIBRATION_PERIOD);
-        void update(const int16_t& val, const uint16_t& timeDelta_ms);
+        void update(const int16_t val, const uint32_t timeDelta_ms);
         int16_t getValue();
         int32_t getAngle();
 
@@ -121,13 +121,11 @@ class MPU6050 : public MPU6050_Raw {
     class AccAxis {
     public:
         AccAxis(const uint16_t accScanPeriod_ms = DEFAULT_ACC_SCAN_PERIOD, const uint16_t accUpdatePeriod_ms = DEFAULT_ACC_UPDATE_PERIOD, const uint16_t shockDutaion_ms = DEFAULT_SHOCK_DURATION);
-        void update(const int16_t& accRaw, const uint16_t& timeDelta_ms);
+        void update(const int16_t accRaw, const uint32_t timeDelta_ms);
         int16_t getValue();
         uint16_t getShock();
 
     private:
-        int16_t accRaw_last;
-
         uint32_t accTime_ms;
         uint32_t shockTime_ms;
 
@@ -173,8 +171,6 @@ public:
     uint16_t getShockZ() { return acc[2].Shock; }
 
 private:
-    int64_t lastUpdated_micros;
-
     GyroAxis gyro[3];
     AccAxis acc[3];
 };
