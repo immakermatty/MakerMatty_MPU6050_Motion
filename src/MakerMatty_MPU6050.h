@@ -134,6 +134,8 @@ class MPU6050 : public MPU6050_Raw {
 
         MA<uint16_t> shockAvrg;
 
+        int16_t accRaw_last;
+
     public:
         const int16_t& Value;
         const uint16_t& Shock;
@@ -173,6 +175,8 @@ public:
 private:
     GyroAxis gyro[3];
     AccAxis acc[3];
+
+    unsigned long lastUpdated_millis;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

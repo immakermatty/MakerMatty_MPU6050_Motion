@@ -171,13 +171,12 @@ MPU6050::AccAxis::AccAxis(const uint16_t accScanPeriod_ms, const uint16_t accUpd
     , shockAvrg(shockDutaion_ms)
     , Value(accAvrg.Value)
     , Shock(shockAvrg.Value)
+    , accRaw_last(0)
 {
 }
 
 void MPU6050::AccAxis::update(const int16_t accRaw, const uint32_t timeDelta_ms)
 {
-    static int16_t accRaw_last = 0;
-
     accTime_ms += timeDelta_ms;
     shockTime_ms += timeDelta_ms;
 
@@ -227,6 +226,7 @@ MPU6050::MPU6050(TwoWire& wire)
     : MPU6050_Raw(wire)
     , gyro { GyroAxis(), GyroAxis(), GyroAxis() }
     , acc { AccAxis(), AccAxis(), AccAxis() }
+    , lastUpdated_millis(0)
 {
 }
 
@@ -237,7 +237,6 @@ void MPU6050::begin(const uint8_t sdaPin, const uint8_t sclPin, const uint32_t w
 
 void MPU6050::update()
 {
-    static unsigned long lastUpdated_millis = 0;
     unsigned long current_millis = millis();
     
     uint32_t delta_ms = (uint32_t)(current_millis - lastUpdated_millis);
