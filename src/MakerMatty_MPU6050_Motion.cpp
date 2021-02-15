@@ -19,7 +19,7 @@ MPU6050_Motion::MPU6050_Motion(TwoWire& w)
 {
 }
 
-bool MPU6050_Motion::begin(const uint8_t sdaPin, const uint8_t sclPin, const uint32_t wireFreq, const BaseType_t xCoreID, SemaphoreHandle_t* pHwSemaphore)
+bool MPU6050_Motion::begin(const uint8_t sdaPin, const uint8_t sclPin, const uint32_t wireFreq, const BaseType_t xCoreID, SemaphoreHandle_t pHwSemaphore)
 {
     if (taskHandle == nullptr) {
 
@@ -36,18 +36,20 @@ bool MPU6050_Motion::begin(const uint8_t sdaPin, const uint8_t sclPin, const uin
             }
         }
 
-        if (pHwSemaphore) {
-            if (*pHwSemaphore == nullptr) {
-                *pHwSemaphore = xSemaphoreCreateMutex();
-                if(!*pHwSemaphore){
-                    assert(*pHwSemaphore);
-                    return false;
-                }
-            }
-            taskData.pHardwareSemaphore = pHwSemaphore;
-        } else {
-            taskData.pHardwareSemaphore = nullptr;
-        }
+        // if (pHwSemaphore) {
+        //     if (*pHwSemaphore == nullptr) {
+        //         *pHwSemaphore = xSemaphoreCreateMutex();
+        //         if(!*pHwSemaphore){
+        //             assert(*pHwSemaphore);
+        //             return false;
+        //         }
+        //     }
+        //    taskData.pHardwareSemaphore = pHwSemaphore;
+        // } else {
+        //     taskData.pHardwareSemaphore = nullptr;
+        // }
+
+        taskData.pHardwareSemaphore = pHwSemaphore;
 
         sda = sdaPin;
         scl = sclPin;
@@ -85,11 +87,11 @@ void MPU6050_Motion::task(void* p)
         //     data->self->mpu6050.read();
         // }
 
-        if (!data->pHardwareSemaphore || xSemaphoreTake(*(data->pHardwareSemaphore), 1)) {
+        if (!data->pHardwareSemaphore || xSemaphoreTake(data->pHardwareSemaphore, 1)) {
             /* takes around 549 us @ 160MHz */
             data->self->mpu6050.read();
             if (data->pHardwareSemaphore) {
-                xSemaphoreGive(*(data->pHardwareSemaphore));
+                xSemaphoreGive(data->pHardwareSemaphore);
             }
         }
 
