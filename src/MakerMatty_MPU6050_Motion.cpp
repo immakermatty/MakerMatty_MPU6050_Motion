@@ -55,7 +55,7 @@ bool MPU6050_Motion::begin(const uint8_t sdaPin, const uint8_t sclPin, const uin
         scl = sclPin;
         freq = wireFreq;
 
-        BaseType_t result = xTaskCreateUniversal(task, "motion", 4096, &taskData, 1, &taskHandle, xCoreID);
+        BaseType_t result = xTaskCreateUniversal(task, "motion", 2048, &taskData, 1, &taskHandle, xCoreID);
 
         if (!result) {
             assert(result == pdPASS);
