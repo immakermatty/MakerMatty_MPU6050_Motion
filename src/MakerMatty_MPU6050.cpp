@@ -170,8 +170,8 @@ MPU6050::AccAxis::AccAxis(const uint16_t accScanPeriod_ms, const uint16_t accUpd
     , accUpdatePeriod_ms(accUpdatePeriod_ms)
     , shockAvrg(shockDutaion_ms)
     , accRaw_last(0)
-    , Value(accAvrg.Value)
-    , Shock(shockAvrg.Value)
+    , Value(accAvrg.getValue())
+    , Shock(shockAvrg.getValue())
 {
 }
 
