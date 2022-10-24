@@ -11,7 +11,9 @@ MPU6050_Raw::MPU6050_Raw(TwoWire& w)
 
 void MPU6050_Raw::begin(const int8_t sda, const int8_t scl, const uint32_t freq)
 {
-    wire->begin(sda, scl, freq);
+    if (!wire->begin(sda, scl, freq)) {
+        log_e("Wire begin failed");
+    }
 
     writeMPU6050(MPU6050_SMPLRT_DIV, 0x00);
     writeMPU6050(MPU6050_CONFIG, 0x00);
@@ -40,7 +42,7 @@ void MPU6050_Raw::read()
         }
     }
 
-    //Serial.printf("%d, %d, %d\period", rawData.gyroX, rawData.gyroY, rawData.gyroZ);
+    // Serial.printf("%d, %d, %d\n", rawData.gyroX, rawData.gyroY, rawData.gyroZ);
 
     //rawData.acc[0] = wire->read() << 8 | wire->read();
     //rawData.acc[1] = wire->read() << 8 | wire->read();
@@ -108,8 +110,8 @@ MPU6050::GyroAxis::GyroAxis(const uint32_t calibPeriod)
     , period(calibPeriod)
     , time(0)
     , angle(0)
-    , Value(value)
-    , Angle(angle)
+    // , Value(value)
+    // , Angle(angle)
 {
 }
 
@@ -168,10 +170,10 @@ MPU6050::AccAxis::AccAxis(const uint16_t accScanPeriod_ms, const uint16_t accUpd
     , shockTime_ms(0)
     , accAvrg(accScanPeriod_ms / accUpdatePeriod_ms)
     , accUpdatePeriod_ms(accUpdatePeriod_ms)
-    , shockAvrg(shockDutaion_ms)
+    , shockAvrg(shockDutaion_ms, 0)
     , accRaw_last(0)
-    , Value(accAvrg.getValue())
-    , Shock(shockAvrg.getValue())
+    // , Value(accAvrg.getValue())
+    // , Shock(shockAvrg.getValue())
 {
 }
 
@@ -187,12 +189,13 @@ void MPU6050::AccAxis::update(const int16_t accRaw, const uint32_t timeDelta_ms)
     accChange = abs(accChange);
 
     //int16_t overflow
-    if (accChange > UINT16_MAX)
+    if (accChange > UINT16_MAX) {
         accChange = UINT16_MAX;
+    }
 
-    while (shockTime_ms >= 1) {
-        shockTime_ms -= 1;
-        //shock is being updated "every 1 ms"
+    while (shockTime_ms >= 10) {
+        shockTime_ms -= 10;
+        //shock is being updated "every 10 ms"
         shockAvrg.update((uint16_t)accChange);
     }
 
@@ -242,6 +245,8 @@ void MPU6050::update()
     uint32_t delta_ms = (uint32_t)(current_millis - lastUpdated_millis);
     lastUpdated_millis = current_millis;
 
+    // Serial.printf("%d, %d, %d, %d, %d, %d\n", rawData.gyroX, rawData.gyroY, rawData.gyroZ, rawData.accX, rawData.accY, rawData.accZ);
+
     for (int i = 0; i < 3; i++) {
         acc[i].update(rawData.acc[i], delta_ms);
         gyro[i].update(rawData.gyro[i], delta_ms);
@@ -262,28 +267,28 @@ void MPU6050::update()
 void MPU6050::getAcc(int16_t buffer[3])
 {
     for (int i = 0; i < 3; i++) {
-        buffer[i] = acc[i].Value;
+        buffer[i] = acc[i].getValue();
     }
 }
 
 void MPU6050::getGyro(int16_t buffer[3])
 {
     for (int i = 0; i < 3; i++) {
-        buffer[i] = gyro[i].Value;
+        buffer[i] = gyro[i].getValue();
     }
 }
 
 void MPU6050::getAngle(int32_t buffer[3])
 {
     for (int i = 0; i < 3; i++) {
-        buffer[i] = gyro[i].Angle;
+        buffer[i] = gyro[i].getAngle();
     }
 }
 
 void MPU6050::getShock(uint16_t buffer[3])
 {
     for (int i = 0; i < 3; i++) {
-        buffer[i] = acc[i].Shock;
+        buffer[i] = acc[i].getShock();
     }
 }
 

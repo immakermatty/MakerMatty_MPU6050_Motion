@@ -105,9 +105,9 @@ class MPU6050 : public MPU6050_Raw {
 
         int32_t angle;
 
-    public:
-        const int16_t& Value;
-        const int32_t& Angle;
+    // public:
+    //     const int16_t& Value;
+    //     const int32_t& Angle;
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -136,9 +136,9 @@ class MPU6050 : public MPU6050_Raw {
 
         int16_t accRaw_last;
 
-    public:
-        const int16_t& Value;
-        const uint16_t& Shock;
+    // public:
+        // const int16_t& Value;
+        // const uint16_t& Shock;
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -151,26 +151,26 @@ public:
     void update();
 
     void getAcc(int16_t buffer[3]);
-    int16_t getAccX() { return acc[0].Value; }
-    int16_t getAccY() { return acc[1].Value; }
-    int16_t getAccZ() { return acc[2].Value; }
+    int16_t getAccX() { return acc[0].getValue(); }
+    int16_t getAccY() { return acc[1].getValue(); }
+    int16_t getAccZ() { return acc[2].getValue(); }
 
     void getGyro(int16_t buffer[3]);
-    int16_t getGyroX() { return gyro[0].Value; }
-    int16_t getGyroY() { return gyro[1].Value; }
-    int16_t getGyroZ() { return gyro[2].Value; }
+    int16_t getGyroX() { return gyro[0].getValue(); }
+    int16_t getGyroY() { return gyro[1].getValue(); }
+    int16_t getGyroZ() { return gyro[2].getValue(); }
 
     //cca 24000000 units per 360°
     //(angle % 12000000 + 12000000) gets range 0 - 24000000
     void getAngle(int32_t buffer[3]);
-    uint16_t getAngleX() { return gyro[0].Angle; }
-    uint16_t getAngleY() { return gyro[1].Angle; }
-    uint16_t getAngleZ() { return gyro[2].Angle; }
+    uint16_t getAngleX() { return gyro[0].getAngle(); }
+    uint16_t getAngleY() { return gyro[1].getAngle(); }
+    uint16_t getAngleZ() { return gyro[2].getAngle(); }
 
     void getShock(uint16_t buffer[3]);
-    uint16_t getShockX() { return acc[0].Shock; }
-    uint16_t getShockY() { return acc[1].Shock; }
-    uint16_t getShockZ() { return acc[2].Shock; }
+    uint16_t getShockX() { return acc[0].getShock(); }
+    uint16_t getShockY() { return acc[1].getShock(); }
+    uint16_t getShockZ() { return acc[2].getShock(); }
 
 private:
     GyroAxis gyro[3];
